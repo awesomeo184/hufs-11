@@ -1,0 +1,11 @@
+cmake==3.18.4.post1
+dlib==19.21.1
+numpy==1.20.1
+opencv-python==4.5.1.48
+pandas==1.2.3
+PyQt5==5.15.4
+PyQt5-Qt5==5.15.2
+PyQt5-sip==12.8.1
+python-dateutil==2.8.1
+pytz==2021.1
+six==1.15.0
