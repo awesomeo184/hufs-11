@@ -1,10 +1,11 @@
-import os
+# import os
 import cv2, dlib
 import numpy as np
 from imutils import face_utils
 from keras.models import load_model
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+# CPU 호환 문제날 경우
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 IMG_SIZE = (34, 26)
 
