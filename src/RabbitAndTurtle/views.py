@@ -9,6 +9,8 @@ from config import setup
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 
+from src.RabbitAndTurtle.EyeTracker import EyeTracker
+
 PATH = setup.UI_PATH
 
 start_form = uic.loadUiType(os.path.join(PATH, "StartWindow.ui"))[0]
@@ -52,15 +54,18 @@ class ImageThread(QThread):
 
     def run(self):
         cap = cv2.VideoCapture(0)
+        eyeTracker = EyeTracker()
         while not self.is_interrupted:
             ret, frame = cap.read()
             if ret:
-                rgbImage = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                rgbImage = eyeTracker.is_blinked(frame)
+
                 h, w, ch = rgbImage.shape
                 bytesPerLine = ch * w
                 convertToQtFormat = QImage(rgbImage.data, w, h, bytesPerLine, QImage.Format_RGB888)
                 p = convertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
                 self.changePixmap.emit(p)
+
 
 
 class ExecWindow(QMainWindow, exec_form):
