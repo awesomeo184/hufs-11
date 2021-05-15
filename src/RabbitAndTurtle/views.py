@@ -17,7 +17,7 @@ start_form = uic.loadUiType(os.path.join(PATH, "StartWindow.ui"))[0]
 exec_form = uic.loadUiType(os.path.join(PATH, "ExecWindow.ui"))[0]
 setting_form = uic.loadUiType(os.path.join(PATH, "SettingWindow.ui"))[0]
 status_form = uic.loadUiType(os.path.join(PATH, "StatusWindow.ui"))[0]
-
+alarm_form = uic.loadUiType(os.path.join(PATH, "AlarmWindow.ui"))[0]
 
 # TODO: 예외 처리, 팝업창, 모듈 연결, 디자인
 
@@ -158,6 +158,30 @@ class StatusWindow(QMainWindow, status_form):
 
     def exit(self):
         self.close()
+
+
+
+class AlarmWindow(QMainWindow, alarm_form):
+    '''
+    오브젝트 목록
+    - 눈 깜빡임 횟수: label_blink_count
+    - 확인 버튼: btn_exit
+    '''
+
+    def __init__(self, parent):
+        super(AlarmWindow, self).__init__(parent)
+        self.setupUi(self)
+        self.get_status()
+        self.btn_exit.clicked.connect(self.exit)
+
+    def get_status(self):
+        # TODO: 깜빡임 횟수 연결
+        self.label_blink_count("8")
+
+
+    def exit(self):
+        self.close()
+
 
 
 if __name__ == "__main__":
