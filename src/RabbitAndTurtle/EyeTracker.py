@@ -1,4 +1,6 @@
 import os
+import threading
+
 import cv2, dlib
 import numpy as np
 from imutils import face_utils
@@ -16,16 +18,28 @@ class EyeTracker:
         self.__model = load_model(os.path.join(setup.MODEL_PATH, 'eye_blink_detector_model.h5'))
         self.__model.summary()
 
+        self.__MINUTE_COUNT = 0
+        self.__start_timer()
+
+
+    def __start_timer(self):
+        timer = threading.Timer(60, self.__start_timer)
+        if not self.__MINUTE_COUNT == 0:
+            if self.__is_eye_dried():
+                # popup warning message
+                print("eye dried")
+            self.__COUNT = 0
+        self.__MINUTE_COUNT += 1
+        timer.start()
+
     def is_blinked(self, img_ori):
         faces, gray, img = self.__get_frontal_faces(img_ori)
 
         for face in faces:
             shapes = self.__predictor(gray, face)
             shapes = face_utils.shape_to_np(shapes)
-
             eye_img_l, eye_rect_l = self.__preprocess_left_eye_img(gray, shapes)
             eye_img_r, eye_rect_r = self.__preprocess_right_eye_img(gray, shapes)
-
             eye_input_l, eye_input_r = self.__reshape_eye_img(eye_img_l, eye_img_r)
 
             pred_l, pred_r = self.__get_prediction(eye_input_l, eye_input_r)
@@ -97,3 +111,7 @@ class EyeTracker:
         eye_img = gray[eye_rect[1]:eye_rect[3], eye_rect[0]:eye_rect[2]]
 
         return eye_img, eye_rect
+
+    def __is_eye_dried(self):
+        return self.__COUNT < 10
+
