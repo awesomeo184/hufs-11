@@ -2,12 +2,15 @@ import os
 import sys
 
 import cv2
+import datetime
+
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, pyqtSlot
 from PyQt5.QtGui import QImage, QPixmap
 
 from config import setup
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
+from PyQt5.QtCore import *
 
 from src.RabbitAndTurtle.EyeTracker import EyeTracker
 
@@ -44,6 +47,19 @@ class StartWindow(QMainWindow, start_form):
         self.exec_window = ExecWindow(self)
         self.exec_window.show()
 
+        self.set = 0
+        self.count = 0
+        self.display=''
+        self.countSec = 0
+        self.countMin = 0
+        self.countHour = 0
+
+        self.set = self.set+1
+        print(self.set)
+
+
+
+
 
 class ImageThread(QThread):
     def __init__(self):
@@ -65,6 +81,8 @@ class ImageThread(QThread):
                 convertToQtFormat = QImage(rgbImage.data, w, h, bytesPerLine, QImage.Format_RGB888)
                 p = convertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
                 self.changePixmap.emit(p)
+
+
 
 
 
@@ -91,6 +109,36 @@ class ExecWindow(QMainWindow, exec_form):
         self.thread = ImageThread()
         self.thread.changePixmap.connect(self.setImage)
         self.thread.start()
+
+        self.count = 0
+        self.flag = True
+
+        # setting text to the label
+        self.label_time.setText(str(self.count))
+
+        # creating a timer object
+        timer = QTimer(self)
+
+        # adding action to timer
+        timer.timeout.connect(self.showTime)
+
+        # update the timer every tenth second
+        timer.start(100)
+
+
+    def showTime(self):
+        # checking if flag is true
+        if self.flag:
+            # incrementing the counter
+            self.count += 1
+
+        # getting text from count
+        text = str(self.count / 10)
+
+        # showing text
+        self.label_time.setText(text)
+
+
 
     def setImage(self, image):
         self.label_webcam.setPixmap(QPixmap.fromImage(image))
