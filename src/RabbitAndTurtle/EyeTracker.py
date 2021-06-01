@@ -21,7 +21,6 @@ class EyeTracker:
         self.__MINUTE_COUNT = 0
         self.__start_timer()
 
-
     def __start_timer(self):
         timer = threading.Timer(60, self.__start_timer)
         if not self.__MINUTE_COUNT == 0:
@@ -114,4 +113,3 @@ class EyeTracker:
 
     def __is_eye_dried(self):
         return self.__COUNT < 10
-

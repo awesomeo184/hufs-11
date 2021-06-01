@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import *
 from PyQt5 import uic
 
 from src.RabbitAndTurtle.EyeTracker import EyeTracker
+from src.RabbitAndTurtle.NeckTracker import NeckTracker
 
 PATH = setup.UI_PATH
 
@@ -55,11 +56,12 @@ class ImageThread(QThread):
     def run(self):
         cap = cv2.VideoCapture(0)
         eyeTracker = EyeTracker()
+        neckTracker = NeckTracker()
         while not self.is_interrupted:
             ret, frame = cap.read()
             if ret:
                 rgbImage = eyeTracker.is_blinked(frame)
-
+                neckTracker.is_good_posture(rgbImage)
                 h, w, ch = rgbImage.shape
                 bytesPerLine = ch * w
                 convertToQtFormat = QImage(rgbImage.data, w, h, bytesPerLine, QImage.Format_RGB888)
