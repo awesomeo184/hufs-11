@@ -13,6 +13,7 @@ from PyQt5 import uic
 from PyQt5.QtCore import *
 
 from src.RabbitAndTurtle.EyeTracker import EyeTracker
+from src.RabbitAndTurtle.NeckTracker import NeckTracker
 
 PATH = setup.UI_PATH
 
@@ -21,6 +22,7 @@ exec_form = uic.loadUiType(os.path.join(PATH, "ExecWindow.ui"))[0]
 setting_form = uic.loadUiType(os.path.join(PATH, "SettingWindow.ui"))[0]
 status_form = uic.loadUiType(os.path.join(PATH, "StatusWindow.ui"))[0]
 alarm_form = uic.loadUiType(os.path.join(PATH, "AlarmWindow.ui"))[0]
+
 
 # TODO: 예외 처리, 팝업창, 모듈 연결, 디자인
 
@@ -49,16 +51,13 @@ class StartWindow(QMainWindow, start_form):
 
         self.set = 0
         self.count = 0
-        self.display=''
+        self.display = ''
         self.countSec = 0
         self.countMin = 0
         self.countHour = 0
 
-        self.set = self.set+1
+        self.set = self.set + 1
         print(self.set)
-
-
-
 
 
 class ImageThread(QThread):
@@ -71,19 +70,18 @@ class ImageThread(QThread):
     def run(self):
         cap = cv2.VideoCapture(0)
         eyeTracker = EyeTracker()
+        neckTracker = NeckTracker()
         while not self.is_interrupted:
             ret, frame = cap.read()
             if ret:
                 rgbImage = eyeTracker.is_blinked(frame)
+                neckTracker.is_good_posture(rgbImage)
 
                 h, w, ch = rgbImage.shape
                 bytesPerLine = ch * w
                 convertToQtFormat = QImage(rgbImage.data, w, h, bytesPerLine, QImage.Format_RGB888)
                 p = convertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
                 self.changePixmap.emit(p)
-
-
-
 
 
 class ExecWindow(QMainWindow, exec_form):
@@ -125,7 +123,6 @@ class ExecWindow(QMainWindow, exec_form):
         # update the timer every tenth second
         timer.start(100)
 
-
     def showTime(self):
         # checking if flag is true
         if self.flag:
@@ -137,8 +134,6 @@ class ExecWindow(QMainWindow, exec_form):
 
         # showing text
         self.label_time.setText(text)
-
-
 
     def setImage(self, image):
         self.label_webcam.setPixmap(QPixmap.fromImage(image))
@@ -208,7 +203,6 @@ class StatusWindow(QMainWindow, status_form):
         self.close()
 
 
-
 class AlarmWindow(QMainWindow, alarm_form):
     '''
     오브젝트 목록
@@ -226,10 +220,8 @@ class AlarmWindow(QMainWindow, alarm_form):
         # TODO: 깜빡임 횟수 연결
         self.label_blink_count("8")
 
-
     def exit(self):
         self.close()
-
 
 
 if __name__ == "__main__":
