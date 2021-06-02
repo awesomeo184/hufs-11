@@ -16,6 +16,7 @@ class DriedEye(QObject):
 class ImageThread(QThread):
     def __init__(self, eyeTracker, eye_warning_signal):
         super().__init__()
+        self.is_interrupted = False
         self.eyeTracker = eyeTracker
         self.eye_warning_signal = eye_warning_signal
 
@@ -24,7 +25,7 @@ class ImageThread(QThread):
     def run(self):
         cap = cv2.VideoCapture(0)
         count = self.eyeTracker.get_warning_count()
-        while True:
+        while not self.is_interrupted:
             ret, frame = cap.read()
             if ret:
                 frame = self.eyeTracker.is_blinked(frame)

@@ -53,6 +53,7 @@ class ExecWindow(QMainWindow, exec_form):
 
     def goto_status_window(self):
         statusWindow = StatusWindow(0, 0, self.eyeTracker.get_warning_count())
+        self.thread.is_interrupted = True
         widgets.addWidget(statusWindow)
         widgets.setCurrentWidget(statusWindow)
 
@@ -77,6 +78,9 @@ class StatusWindow(QMainWindow, status_form):
         self.exec_time = exec_time
         self.turtle_neck_warning_count = turtle_neck_warning_count
         self.eye_dried_warning_count = eye_dried_warning_count
+
+
+
 
 
 if __name__ == "__main__":
