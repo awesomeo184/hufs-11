@@ -1,8 +1,8 @@
 import os
 import sys
+import time
 
 import cv2
-import datetime
 
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, pyqtSlot
 from PyQt5.QtGui import QImage, QPixmap
@@ -23,6 +23,7 @@ setting_form = uic.loadUiType(os.path.join(PATH, "SettingWindow.ui"))[0]
 status_form = uic.loadUiType(os.path.join(PATH, "StatusWindow.ui"))[0]
 alarm_form = uic.loadUiType(os.path.join(PATH, "AlarmWindow.ui"))[0]
 
+eyeTracker = None
 
 # TODO: 예외 처리, 팝업창, 모듈 연결, 디자인
 
@@ -43,39 +44,41 @@ class StartWindow(QMainWindow, start_form):
 
         self.btn_start.clicked.connect(self.activate_exec_window)
         self.btn_setting.clicked.connect(self.setting_window.show)
+        self.show()
 
     def activate_exec_window(self):
         self.hide()
         self.exec_window = ExecWindow(self)
         self.exec_window.show()
 
-        self.set = 0
-        self.count = 0
-        self.display = ''
-        self.countSec = 0
-        self.countMin = 0
-        self.countHour = 0
-
-        self.set = self.set + 1
-        print(self.set)
 
 
 class ImageThread(QThread):
-    def __init__(self):
+    def __init__(self, dried_eye_signal):
         super().__init__()
         self.is_interrupted = False
+        self.dried_eye_signal = dried_eye_signal
 
     changePixmap = pyqtSignal(QImage)
 
     def run(self):
+        global eyeTracker
         cap = cv2.VideoCapture(0)
         eyeTracker = EyeTracker()
         neckTracker = NeckTracker()
+
+        count = eyeTracker.dried_count
+
         while not self.is_interrupted:
             ret, frame = cap.read()
+
             if ret:
                 rgbImage = eyeTracker.is_blinked(frame)
                 neckTracker.is_good_posture(rgbImage)
+
+                if count != eyeTracker.dried_count:
+                    self.dried_eye_signal.dry()
+                    count = eyeTracker.dried_count
 
                 h, w, ch = rgbImage.shape
                 bytesPerLine = ch * w
@@ -100,11 +103,13 @@ class ExecWindow(QMainWindow, exec_form):
         super(ExecWindow, self).__init__(parent)
         self.setupUi(self)
         self.setting_window = parent.setting_window
+        self.dried_eye_signal = DriedEye()
 
         self.btn_status.clicked.connect(self.terminate)
         self.btn_setting.clicked.connect(self.setting_window.show)
+        self.dried_eye_signal.dried.connect(self.show_eye_dried_pop_up_message)
 
-        self.thread = ImageThread()
+        self.thread = ImageThread(self.dried_eye_signal)
         self.thread.changePixmap.connect(self.setImage)
         self.thread.start()
 
@@ -123,6 +128,14 @@ class ExecWindow(QMainWindow, exec_form):
         # update the timer every tenth second
         timer.start(100)
 
+    def show_eye_dried_pop_up_message(self):
+        box = QMessageBox()
+        box.setWindowTitle("eye dry warning")
+        box.setText("안구 건조 위험")
+        box.resize(300, 200)
+        box.exec_()
+
+
     def showTime(self):
         # checking if flag is true
         if self.flag:
@@ -130,7 +143,8 @@ class ExecWindow(QMainWindow, exec_form):
             self.count += 1
 
         # getting text from count
-        text = str(self.count / 10)
+        strftime = time.strftime('%H:%M:%S', time.gmtime(self.count))
+        text = str(strftime)
 
         # showing text
         self.label_time.setText(text)
@@ -144,6 +158,17 @@ class ExecWindow(QMainWindow, exec_form):
         self.status_window = StatusWindow(self)
         self.status_window.show()
 
+
+# 안구건조 시그널
+class DriedEye(QObject):
+
+    dried = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+
+    def dry(self):
+        self.dried.emit()
 
 class SettingWindow(QMainWindow, setting_form):
     '''
@@ -227,5 +252,4 @@ class AlarmWindow(QMainWindow, alarm_form):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     myWindow = StartWindow()
-    myWindow.show()
     app.exec_()
