@@ -67,7 +67,7 @@ class ImageThread(QThread):
         eyeTracker = EyeTracker()
         neckTracker = NeckTracker()
 
-        count = eyeTracker.dried_count
+        count = eyeTracker.warning_count
 
         while not self.is_interrupted:
             ret, frame = cap.read()
@@ -76,9 +76,9 @@ class ImageThread(QThread):
                 rgbImage = eyeTracker.is_blinked(frame)
                 neckTracker.is_good_posture(rgbImage)
 
-                if count != eyeTracker.dried_count:
+                if count != eyeTracker.warning_count:
                     self.dried_eye_signal.dry()
-                    count = eyeTracker.dried_count
+                    count = eyeTracker.warning_count
 
                 h, w, ch = rgbImage.shape
                 bytesPerLine = ch * w

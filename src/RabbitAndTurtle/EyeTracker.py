@@ -19,7 +19,7 @@ class EyeTracker:
         self.__model = load_model(os.path.join(setup.MODEL_PATH, 'eye_blink_detector_model.h5'))
         self.__model.summary()
 
-        self.dried_count = 0
+        self.warning_count = 0
         self.__MINUTE_COUNT = 0
         self.__start_timer()
 
@@ -29,7 +29,7 @@ class EyeTracker:
         if not self.__MINUTE_COUNT == 0:
             if self.__is_eye_dried():
                 # popup warning message
-                self.dried_count += 1
+                self.warning_count += 1
             self.__COUNT = 0
         self.__MINUTE_COUNT += 1
         timer.start()
@@ -46,6 +46,7 @@ class EyeTracker:
 
             pred_l, pred_r = self.__get_prediction(eye_input_l, eye_input_r)
 
+            # 눈을 한번 깜빡일때 체크
             if (pred_r <= 0.1 or pred_l <= 0.1) and self.__STATUS:
                 self.__COUNT += 1
                 self.__STATUS = False
@@ -117,3 +118,5 @@ class EyeTracker:
     def __is_eye_dried(self):
         return self.__COUNT < 10
 
+    def get_warning_count(self):
+        return self.warning_count
