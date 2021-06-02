@@ -10,6 +10,7 @@ from PyQt5.QtCore import *
 
 from config import setup
 from EyeTracker import EyeTracker
+from signals import DriedEye, ImageThread
 
 PATH = setup.UI_PATH
 start_form = uic.loadUiType(os.path.join(PATH, "StartWindow.ui"))[0]
@@ -32,51 +33,14 @@ class StartWindow(QMainWindow, start_form):
 
 class ExecWindow(QMainWindow, exec_form):
 
-    class DriedEye(QObject):
-        dried = pyqtSignal(int)
-
-        def __init__(self):
-            super().__init__()
-
-        def warn(self, warning_count):
-            self.dried.emit(warning_count)
-
-    class ImageThread(QThread):
-        def __init__(self, eyeTracker, eye_warning_signal):
-            super().__init__()
-            self.eyeTracker = eyeTracker
-            self.eye_warning_signal = eye_warning_signal
-
-        stream = pyqtSignal(QImage)
-
-        def run(self):
-            cap = cv2.VideoCapture(0)
-            count = self.eyeTracker.get_warning_count()
-            while True:
-                ret, frame = cap.read()
-                if ret:
-                    frame = self.eyeTracker.is_blinked(frame)
-
-                    # * warning count가 1 증가하면 시그널 보냄
-                    if self.eyeTracker.get_warning_count() > count:
-                        self.eye_warning_signal.warn(self.eyeTracker.get_warning_count())
-                        count = self.eyeTracker.get_warning_count()
-
-                    rgbImage = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    h, w, ch = rgbImage.shape
-                    bytesPerLine = ch * w
-                    convertToQtFormat = QImage(rgbImage.data, w, h, bytesPerLine, QImage.Format_RGB888)
-                    p = convertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
-                    self.stream.emit(p)
-
     def __init__(self):
         super(ExecWindow, self).__init__()
         self.setupUi(self)
 
         # * utility
-        self.eye_warning_signal = self.DriedEye()
+        self.eye_warning_signal = DriedEye()
         self.eyeTracker = EyeTracker()
-        self.thread = self.ImageThread(self.eyeTracker, self.eye_warning_signal)
+        self.thread = ImageThread(self.eyeTracker, self.eye_warning_signal)
 
         # * click signal
         self.btn_status.clicked.connect(self.goto_status_window)
